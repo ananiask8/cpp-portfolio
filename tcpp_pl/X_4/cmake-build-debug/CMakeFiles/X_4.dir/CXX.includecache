@@ -1,0 +1,24 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/Users/jhilario/Documents/portfolio/tcpp_pl/X_4/general.cpp
+iostream
+-
+thread
+-
+list
+-
+complex
+-
+general.h
+/Users/jhilario/Documents/portfolio/tcpp_pl/X_4/general.h
+
+/Users/jhilario/Documents/portfolio/tcpp_pl/X_4/general.h
+vector
+-
+

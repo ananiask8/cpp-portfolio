@@ -1,0 +1,42 @@
+[1] When first reading this chapter, keep a record of information that was new or surprising to
+you. Later, use that list to focus your further studies.
+
+[2] (*1) What does a compiler do? What does a linker do?
+	A compiler converts the code from being written in a programming language, to a machine language; it produces binaries out of the written implementations.
+
+	A linker combines the distinct binaries created by the compiler, into a whole working system.
+
+	The source text is processed by a compiler, producing object files. Then these are combined by a linker, yielding an executable program.
+
+[3] (*2) Get the "Hello, world!" program (§2.2.1) to run. This is not an exercise in programming. It is an exercise to test your use of your edit-compile-link-execute tool chain.
+
+[4] (*1) List three (or more) C++ compilers.
+	See lists http://www.stroustrup.com/compilers.html and http://www.compilers.net/Dir/Free/Compilers/CCpp.htm.
+	- For free:
+		a) Apple C++ (Xcode).
+		b) Bloodshed Dev-C++. A GCC-based (Mingw) IDE.
+		c) Clang C++. A relatively very active development associated with the analysis and code generation framework, LLVM.
+		d) Cygwin (GNU C++)
+		e) MINGW (Minimalist GNU for Windows).
+		f) GNU CC source.
+		g) IBM C++ for IBM power, System Z, Bluegene, and Cell.
+		h) Intel C++.
+		i) Microsoft Visual C++.
+		j) Oracle C++.
+	- For a payment:
+		a) Embarcadero C++.
+		b) Edison Design Group C++ Front End - used by many C++ compiler suppliers.
+		c) Green Hills C++ for many embedded systems platforms.
+		d) HP C++.
+		e) Intel C++ for Windows, Linux, and some embedded systems.
+		f) Microsoft C++.
+		g) The Portland Group C++ (parallelization and GPUs)
+[5] (*1) Write out a bool, a char, an int, a double, and a string.
+
+[6] (*1) Read in a bool, a char, an int, a double, and a string.
+
+[7] (*2) What is an invariant and what good might it do?
+
+	Invariants are the preconditions that must always hold when executing a function. If it is feasible, we should test them, to ensure proper functioning of the program.
+
+	It is the job of the constructor to establish the invariant for its class, so that the member functions can rely on it, and for the member functions to make sure that the invariant holds when they exit. For instance, at the constructor we might initialize certain variables; and then we can assume that they will be initialized in the rest of member functions.

@@ -1,0 +1,38 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/Users/jhilario/Documents/portfolio/tcpp_pl/X_3/general.cpp
+math.h
+/Users/jhilario/Documents/portfolio/tcpp_pl/X_3/math.h
+
+/Users/jhilario/Documents/portfolio/tcpp_pl/X_3/helloWorld.cpp
+iostream
+-
+
+/Users/jhilario/Documents/portfolio/tcpp_pl/X_3/main.cpp
+helloWorld.cpp
+/Users/jhilario/Documents/portfolio/tcpp_pl/X_3/helloWorld.cpp
+writeOut.cpp
+/Users/jhilario/Documents/portfolio/tcpp_pl/X_3/writeOut.cpp
+readIn.cpp
+/Users/jhilario/Documents/portfolio/tcpp_pl/X_3/readIn.cpp
+general.cpp
+/Users/jhilario/Documents/portfolio/tcpp_pl/X_3/general.cpp
+
+/Users/jhilario/Documents/portfolio/tcpp_pl/X_3/readIn.cpp
+iostream
+-
+tic.h
+-
+typeinfo
+-
+
+/Users/jhilario/Documents/portfolio/tcpp_pl/X_3/writeOut.cpp
+iostream
+-
+

@@ -30,6 +30,11 @@ void Agent<T>::train(std::shared_ptr<DatasetBase>& data) {
 }
 
 template <typename T>
+Agent<T>::loss(const torch::Tensor& y, const torch::Tensor& target) {
+    return criterion(y, target, torch::Reduction::Mean);
+}
+
+template <typename T>
 void Agent<T>::eval(std::shared_ptr<DatasetBase>&data) {
 
 }

@@ -24,24 +24,12 @@ public:
     Loader() : file{"01.cfg"}, device{"cpu"} {}
     Loader(std::string filename, std::string device_id);
 
-    std::shared_ptr<AgentBase> process();
-
-    template <typename D>
-    friend std::pair<
-            std::shared_ptr<torch::data::DataLoaderBase<D,typename D::BatchType::value_type, typename D::BatchRequestType>>,
-            std::shared_ptr<torch::data::DataLoaderBase<D,typename D::BatchType::value_type, typename D::BatchRequestType>>> load_dataset(Loader&);
+    std::tuple<std::shared_ptr<AgentBase>, std::shared_ptr<CustomDataset>, std::shared_ptr<CustomDataset>> process();
     friend std::istream &operator>>(std::istream& in, Loader& cfg);
-
-    using DatasetType = nullptr_t;
 private:
     std::string file;
     torch::Device device;
     std::map<std::string, std::string> dict;
 };
-
-template <typename D>
-std::pair<
-std::shared_ptr<torch::data::DataLoaderBase<D,typename D::BatchType::value_type, typename D::BatchRequestType>>,
-std::shared_ptr<torch::data::DataLoaderBase<D,typename D::BatchType::value_type, typename D::BatchRequestType>>> load_dataset(Loader&);
 
 #endif //DIPLOMA_CONFIG_H

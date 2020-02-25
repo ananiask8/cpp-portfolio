@@ -7,32 +7,33 @@
 
 #include <torch/torch.h>
 
-class DatasetBase {
+class CustomDataset : public torch::data::Dataset<CustomDataset> {
+protected:
+    torch::Tensor data, target;
 public:
-    DatasetBase() {}
+    enum class Mode { kTrain, kTest };
+    CustomDataset(const std::string& root, Mode mode = Mode::kTrain) {};
 
-    virtual torch::data::DataLoaderBase<
-            torch::data::datasets::MNIST,
-            typename torch::data::datasets::MNIST::BatchType::value_type,
-            typename torch::data::datasets::MNIST::BatchRequestType> get_loader() = 0;
+    virtual torch::Tensor read_data(const std::string& root, bool train) = 0;
+    virtual torch::Tensor read_target(const std::string& root, bool train) = 0;
 
+    virtual torch::data::Example<> get(size_t index) override;
+    virtual torch::optional<size_t> size() const override;
 };
 
-template <typename Dataset>
-class DatasetWrapper : public torch::data::DataLoaderBase<
-        Dataset,
-        typename Dataset::BatchType::value_type,
-        typename Dataset::BatchRequestType>, DatasetBase {
-    using DataLoader = torch::data::DataLoaderBase<
-            Dataset, typename Dataset::BatchType::value_type, typename Dataset::BatchRequestType>;
-public:
-    DatasetWrapper(Dataset& data_loader) : loader {data_loader} {}
-    DataLoader& get_loader() override { return loader; }
-private:
-    DataLoader& loader;
+class MNIST : public CustomDataset {
+    MNIST(const std::string& root, Mode mode = Mode::kTrain)
+        : CustomDataset(root, mode) {
+        data = read_data(root, mode == Mode::kTrain);
+        target = read_target(root, mode == Mode::kTrain);
+    };
+
+    virtual torch::Tensor read_data(const std::string&, bool) override;
+    virtual torch::Tensor read_target(const std::string&, bool) override;
 };
 
-template <typename D>
-std::shared_ptr<DatasetBase> wrap_dataset(D& loader);
+class FashionMNIST : public CustomDataset {
+
+};
 
 #endif //DIPLOMA_DATASET_H

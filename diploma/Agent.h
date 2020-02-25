@@ -10,11 +10,12 @@
 
 class AgentBase {
 public:
-    AgentBase() {}
-//    virtual void train(std::shared_ptr<DatasetBase>&) = 0;
-//    virtual void eval(std::shared_ptr<DatasetBase>&) = 0;
-    virtual auto get_criterion() = 0;
-private:
+    AgentBase(torch::nn::Module mmodel, std::shared_ptr<torch::optim::Optimizer> moptim)
+            : model {mmodel}, optim {moptim} {}
+    virtual void train(std::shared_ptr<CustomDataset>&) = 0;
+    virtual void eval(std::shared_ptr<CustomDataset>&) = 0;
+    virtual torch::Tensor loss(const torch::Tensor&, const torch::Tensor&) = 0;
+protected:
     torch::nn::Module model;
     std::shared_ptr<torch::optim::Optimizer> optim;
 };
@@ -24,13 +25,10 @@ class Agent : public AgentBase {
 public:
     Agent() {}
     Agent(torch::nn::Module mmodel, std::shared_ptr<torch::optim::Optimizer> moptim, LossType mcriterion)
-        : model {mmodel}, optim {moptim}, criterion {mcriterion} {}
-
-    template<typename DatasetType>
-    friend void train(DatasetType& data);
-
-    template<typename DatasetType>
-    friend void eval(DatasetType& data);
+        : AgentBase(mmodel, moptim), criterion {mcriterion} {}
+    virtual void train(std::shared_ptr<CustomDataset>& dataset) override;
+    virtual void eval(std::shared_ptr<CustomDataset>& dataset) override;
+    virtual torch::Tensor loss(const torch::Tensor&, const torch::Tensor&) override;
 private:
     LossType criterion;
 };

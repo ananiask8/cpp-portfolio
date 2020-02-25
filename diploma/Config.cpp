@@ -10,20 +10,20 @@
 using namespace std;
 
 namespace ConfigHelpers {
-    std::map<std::string, Model> models {
+    map<std::string, Model> models {
         { "baseline_std_mnist", Model::BaselineStdMnist },
         { "baseline_adv_mnist", Model::BaselineAdvMnist }
 
     };
-    std::map<std::string, Optimizer> optimizers {
+    map<std::string, Optimizer> optimizers {
             { "adam", Optimizer::Adam },
             { "sgd", Optimizer::SGD }
     };
-    std::map<std::string, Loss> losses {
+    map<std::string, Loss> losses {
             { "nll", Loss::NLL },
             { "mse", Loss::MSE }
     };
-    std::map<std::string, Dataset> datasets {
+    map<std::string, Dataset> datasets {
             { "mnist", Dataset::MNIST },
             { "fashion_mnist", Dataset::FashionMNIST }
     };
@@ -36,52 +36,12 @@ Loader::Loader(string filename, string device_id) : file{filename}, device{devic
     } catch (invalid_argument e) {
         cerr << "Invalid path for file." << endl;
     } catch (exception e) {
-        cerr << "Wrong input: " << e.what() << endl;
+        cerr << "Wrong data: " << e.what() << endl;
     }
     in >> *this;
 }
 
-template <typename Dataset>
-struct AgentOptions {
-    AgentOptions(std::string dataset_path) : dataset{} {}
-
-    torch::nn::Module model;
-    std::shared_ptr<torch::optim::Optimizer> optimizer;
-    Dataset dataset;
-};
-
-template <typename D>
-pair<
-        shared_ptr<torch::data::DataLoaderBase<D,typename D::BatchType::value_type, typename D::BatchRequestType>>,
-        shared_ptr<torch::data::DataLoaderBase<D,typename D::BatchType::value_type, typename D::BatchRequestType>>>
-            load_dataset(Loader& loader) {
-    using namespace ConfigHelpers;
-    namespace data = torch::data;
-    namespace opt = torch::optim;
-    namespace nn = torch::nn;
-
-    string dataset_path {loader.dict.at("dataset_path")};
-    switch (datasets.at(loader.dict.at("dataset"))) {
-        case Dataset::MNIST: {
-            auto train_dataset = data::datasets::MNIST(dataset_path)
-                    .map(data::transforms::Normalize<>(0.1307, 0.3081))
-                    .map(data::transforms::Stack<>());
-            auto train_loader = data::make_data_loader<data::samplers::SequentialSampler>(
-                    std::move(train_dataset), std::stoi(loader.dict.at("train_batch_size")));
-            auto test_dataset = data::datasets::MNIST(dataset_path)
-                    .map(data::transforms::Normalize<>(0.1307, 0.3081))
-                    .map(data::transforms::Stack<>());
-            auto test_loader = data::make_data_loader<data::samplers::SequentialSampler>(
-                    std::move(test_dataset), std::stoi(loader.dict.at("test_batch_size")));
-            return {*train_loader, *test_loader};
-        }
-        case Dataset::FashionMNIST:
-            // TODO
-            break;
-    }
-}
-
-std::shared_ptr<AgentBase> Loader::process() {
+tuple<shared_ptr<AgentBase>, shared_ptr<CustomDataset>, shared_ptr<CustomDataset>> Loader::process() {
     using namespace ConfigHelpers;
     namespace data = torch::data;
     namespace opt = torch::optim;
@@ -92,6 +52,26 @@ std::shared_ptr<AgentBase> Loader::process() {
         case Model::BaselineStdMnist:
             model = BaselineStdMNIST();
         case Model::BaselineAdvMnist:
+            // TODO
+            break;
+    }
+
+    string dataset_path {dict.at("dataset_path")};
+    switch (datasets.at(dict.at("dataset"))) {
+        case Dataset::MNIST: {
+            auto train_dataset = data::datasets::MNIST(dataset_path)
+                    .map(data::transforms::Normalize<>(0.1307, 0.3081))
+                    .map(data::transforms::Stack<>());
+            auto train_loader = data::make_data_loader<data::samplers::SequentialSampler>(
+                    std::move(train_dataset), std::stoi(dict.at("train_batch_size")));
+            auto test_dataset = data::datasets::MNIST(dataset_path)
+                    .map(data::transforms::Normalize<>(0.1307, 0.3081))
+                    .map(data::transforms::Stack<>());
+            auto test_loader = data::make_data_loader<data::samplers::SequentialSampler>(
+                    std::move(test_dataset), std::stoi(dict.at("test_batch_size")));
+//            return {*train_loader, *test_loader};
+        }
+        case Dataset::FashionMNIST:
             // TODO
             break;
     }
@@ -112,7 +92,7 @@ std::shared_ptr<AgentBase> Loader::process() {
         case Loss::NLL:
             agent = std::make_shared<Agent<nn::NLLLoss>>(Agent<nn::NLLLoss>(model, optimizer, nn::NLLLoss()));
     }
-    return agent;
+    return {agent, nullptr, nullptr};
 }
 
 class KeyValuePair : public string {};

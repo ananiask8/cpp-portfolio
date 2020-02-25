@@ -5,13 +5,17 @@ using namespace std;
 
 int main(int argc, char* argv[]) {
     shared_ptr<AgentBase> agent {nullptr};
+    shared_ptr<CustomDataset> train_dataset {nullptr};
+    shared_ptr<CustomDataset> test_dataset {nullptr};
     if (argc > 1) {
         try {
             Loader config{argv[1], argv[2]};
-            agent = config.process();
-            auto datasets = load_dataset<torch::data::datasets::MNIST>(config);
+            auto loaded = config.process();
+            agent = get<0>(loaded);
+            train_dataset = get<1>(loaded);
+            test_dataset = get<2>(loaded);
         } catch (invalid_argument e) {
-            cerr << "Wrong input!" << endl;
+            cerr << "Wrong data!" << endl;
         }
     } else {
         cout << "Please provide the required arguments: " << endl

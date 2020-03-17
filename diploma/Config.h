@@ -24,9 +24,17 @@ public:
     Loader() : file{"01.cfg"}, device{"cpu"} {}
     Loader(std::string filename, std::string device_id);
 
-    std::tuple<std::shared_ptr<AgentBase>, std::shared_ptr<CustomDataset>, std::shared_ptr<CustomDataset>> process();
+//    std::tuple<std::shared_ptr<AgentBase>, std::shared_ptr<CustomDataset>, std::shared_ptr<CustomDataset>> process();
+//    std::tuple<
+//    std::shared_ptr<AgentBase>,
+//    torch::data::StatelessDataLoader<CustomDataset, torch::data::samplers::SequentialSampler>,
+//    torch::data::StatelessDataLoader<CustomDataset, torch::data::samplers::SequentialSampler>> process();
+    auto process();
     friend std::istream &operator>>(std::istream& in, Loader& cfg);
 private:
+    auto get_agent();
+    auto get_dataset();
+
     std::string file;
     torch::Device device;
     std::map<std::string, std::string> dict;

@@ -8,32 +8,38 @@
 #include <torch/torch.h>
 
 class CustomDataset : public torch::data::Dataset<CustomDataset> {
-protected:
-    torch::Tensor data, target;
 public:
     enum class Mode { kTrain, kTest };
     CustomDataset(const std::string& root, Mode mode = Mode::kTrain) {};
 
-    virtual torch::Tensor read_data(const std::string& root, bool train) = 0;
-    virtual torch::Tensor read_target(const std::string& root, bool train) = 0;
+//    virtual torch::Tensor read_data(const std::string& root, bool train) = 0;
+//    virtual torch::Tensor read_target(const std::string& root, bool train) = 0;
 
-    virtual torch::data::Example<> get(size_t index) override;
-    virtual torch::optional<size_t> size() const override;
+    torch::data::Example<> get(size_t index) override {}
+    torch::optional<size_t> size() const override {}
+    virtual bool is_train() const noexcept {}
+    virtual const torch::Tensor& data() const {}
+    virtual const torch::Tensor& targets() const {}
 };
 
 class MNIST : public CustomDataset {
-    MNIST(const std::string& root, Mode mode = Mode::kTrain)
-        : CustomDataset(root, mode) {
-        data = read_data(root, mode == Mode::kTrain);
-        target = read_target(root, mode == Mode::kTrain);
-    };
+public:
+    MNIST(const std::string& root, Mode mode = Mode::kTrain);
 
-    virtual torch::Tensor read_data(const std::string&, bool) override;
-    virtual torch::Tensor read_target(const std::string&, bool) override;
+    torch::data::Example<> get(size_t index) override;
+    torch::optional<size_t> size() const override;
+    bool is_train() const noexcept override;
+    const torch::Tensor& data() const override;
+    const torch::Tensor& targets() const override;
+private:
+//    torch::Tensor read_data(const std::string&, bool) override;
+//    torch::Tensor read_target(const std::string&, bool) override;
+    torch::Tensor images_, targets_;
+
 };
 
-class FashionMNIST : public CustomDataset {
-
-};
+//class FashionMNIST : public CustomDataset {
+    //// TODO ////
+//};
 
 #endif //DIPLOMA_DATASET_H

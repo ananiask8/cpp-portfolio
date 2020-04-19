@@ -6,16 +6,18 @@
 #define DIPLOMA_BASELINESTDMNIST_H
 
 #include <torch/torch.h>
+#include "NeuralNetworkBase.h"
 
-class BaselineStdMNIST : public torch::nn::Module {
+struct BaselineStdMNISTImpl : public NeuralNetworkBase {
 public:
-    BaselineStdMNIST();
-    torch::Tensor forward(const torch::Tensor&);
+    BaselineStdMNISTImpl();
+    torch::Tensor forward(const torch::Tensor&) override;
 private:
     torch::nn::ModuleList hidden_layers;
     torch::nn::AdaptiveAvgPool2d avg_pool;
     torch::nn::LogSoftmax log_soft;
 };
 
+TORCH_MODULE(BaselineStdMNIST);
 
 #endif //DIPLOMA_BASELINESTDMNIST_H

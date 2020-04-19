@@ -4,6 +4,8 @@
 
 #include "Dataset.h"
 
+#include <utility>
+
 using namespace torch;
 
 namespace {
@@ -89,26 +91,32 @@ namespace {
     }
 } // namespace
 
-MNIST::MNIST(const std::string& root, Mode mode)
-        : CustomDataset(root), images_(read_images(root, mode == Mode::kTrain)),
+DatasetWrapper::DatasetWrapper(
+        CustomDataset mdataset,
+        DatasetTransforms mtransforms,
+        int mbatch_size, long mepochs)
+        : dataset{std::move(mdataset)}, transforms{std::move(mtransforms)}, batch_size{mbatch_size}, epochs{mepochs} {}
+
+CustomDataset::CustomDataset(const std::string& root, Mode mode)
+        : images_(read_images(root, mode == Mode::kTrain)),
           targets_(read_targets(root, mode == Mode::kTrain)) {}
 
-data::Example<> MNIST::get(size_t index) {
+data::Example<> CustomDataset::get(size_t index) {
     return {images_[index], targets_[index]};
 }
 
-optional<size_t> MNIST::size() const {
+optional<size_t> CustomDataset::size() const {
     return images_.size(0);
 }
 
-bool MNIST::is_train() const noexcept {
+bool CustomDataset::is_train() const noexcept {
     return images_.size(0) == kTrainSize;
 }
 
-const Tensor& MNIST::data() const {
+const Tensor& CustomDataset::data() const {
     return images_;
 }
 
-const Tensor& MNIST::targets() const {
+const Tensor& CustomDataset::targets() const {
     return targets_;
 }

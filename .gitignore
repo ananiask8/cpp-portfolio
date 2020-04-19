@@ -1,0 +1,4 @@
+diploma/cmake-build-debug/*
+.DS_Store
+diploma/.idea/*
+*/.git/

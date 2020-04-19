@@ -10,27 +10,13 @@
 class CustomDataset : public torch::data::Dataset<CustomDataset> {
 public:
     enum class Mode { kTrain, kTest };
-    CustomDataset(const std::string& root, Mode mode = Mode::kTrain) {};
 
-//    virtual torch::Tensor read_data(const std::string& root, bool train) = 0;
-//    virtual torch::Tensor read_target(const std::string& root, bool train) = 0;
-
-    torch::data::Example<> get(size_t index) override {}
-    torch::optional<size_t> size() const override {}
-    virtual bool is_train() const noexcept {}
-    virtual const torch::Tensor& data() const {}
-    virtual const torch::Tensor& targets() const {}
-};
-
-class MNIST : public CustomDataset {
-public:
-    MNIST(const std::string& root, Mode mode = Mode::kTrain);
-
+    CustomDataset(const std::string& root, Mode mode = Mode::kTrain);
     torch::data::Example<> get(size_t index) override;
     torch::optional<size_t> size() const override;
-    bool is_train() const noexcept override;
-    const torch::Tensor& data() const override;
-    const torch::Tensor& targets() const override;
+    bool is_train() const noexcept;
+    const torch::Tensor& data() const;
+    const torch::Tensor& targets() const;
 private:
 //    torch::Tensor read_data(const std::string&, bool) override;
 //    torch::Tensor read_target(const std::string&, bool) override;
@@ -41,5 +27,20 @@ private:
 //class FashionMNIST : public CustomDataset {
     //// TODO ////
 //};
+
+struct DatasetTransforms {
+    std::shared_ptr<torch::data::transforms::Normalize<>> normalize = nullptr;
+    std::shared_ptr<torch::data::transforms::Stack<>> stack = nullptr;
+};
+
+class DatasetWrapper {
+public:
+    DatasetWrapper(CustomDataset dataset, DatasetTransforms transforms, int batch_size, long epochs = 0);
+
+    CustomDataset dataset;
+    DatasetTransforms transforms;
+    int batch_size;
+    long epochs;
+};
 
 #endif //DIPLOMA_DATASET_H

@@ -5,8 +5,8 @@ using namespace std;
 
 int main(int argc, char* argv[]) {
     shared_ptr<AgentBase> agent {nullptr};
-    shared_ptr<CustomDataset> train_dataset {nullptr};
-    shared_ptr<CustomDataset> test_dataset {nullptr};
+    shared_ptr<DatasetWrapper> train_dataset {nullptr};
+    shared_ptr<DatasetWrapper> test_dataset {nullptr};
     if (argc > 1) {
         try {
             Loader config{argv[1], argv[2]};
@@ -23,8 +23,7 @@ int main(int argc, char* argv[]) {
             << " [DEVICE] - device to use (cuda:i, cpu)" << endl;
     }
 
-    agent->train(train_dataset);
-    agent->eval(test_dataset);
+    agent->train(*train_dataset, *test_dataset);
 
     return 0;
 }

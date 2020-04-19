@@ -41,16 +41,6 @@ Loader::Loader(string filename, string device_id) : file{filename}, device{devic
     in >> *this;
 }
 
-template<typename Self, typename TransformType, typename... Tail>
-auto transforms(Self self, TransformType transform, Tail... tail) {
-    return transforms(self.map(transform), tail...);
-}
-
-template<typename Self, typename TransformType>
-auto transforms(Self self, TransformType transform) {
-    return self.map(transform);
-}
-
 class FoldBase {
 public:
 
@@ -64,7 +54,7 @@ public:
 //    }
 //    auto load() {
 //        return torch::data::make_data_loader<torch::data::samplers::SequentialSampler>(
-//                move(MNIST("dataset_path")), stoi("dict.at(train_batch_size)"));
+//                move(CustomDataset("dataset_path")), stoi("dict.at(train_batch_size)"));
 //    }
 //};
 
@@ -75,41 +65,50 @@ public:
 //        torch::data::transforms::Normalize<>, torch::data::transforms::Stack<>> Loader::process() {
 //tuple<shared_ptr<AgentBase>, shared_ptr<CustomDataset>, shared_ptr<CustomDataset>> Loader::process() {
 
-auto Loader::get_agent() {
+std::shared_ptr<AgentBase> Loader::get_agent() {
     using namespace ConfigHelpers;
     namespace data = torch::data;
     namespace opt = torch::optim;
     namespace nn = torch::nn;
 
-    nn::Module model;
+    std::shared_ptr<NeuralNetworkBase> model;
     switch (models.at(dict.at("model_name"))) {
         case Model::BaselineStdMnist:
-            model = BaselineStdMNIST();
+            model = std::make_shared<BaselineStdMNISTImpl>(BaselineStdMNISTImpl());
         case Model::BaselineAdvMnist:
             // TODO
             break;
     }
 
-    double lr = std::stod(dict.at("lr"));
+    double lr = std::stod(dict.at("learning_rate"));
     std::shared_ptr<opt::Optimizer> optimizer {nullptr};
     switch (optimizers.at(dict.at("optimizer"))) {
         case Optimizer::Adam:
-            optimizer = std::make_shared<opt::Adam>(opt::Adam(model.parameters(), opt::AdamOptions(lr)));
+            optimizer = std::make_shared<opt::Adam>(opt::Adam(model->parameters(), opt::AdamOptions(lr)));
         case Optimizer::SGD:
-            optimizer = std::make_shared<opt::SGD>(opt::SGD(model.parameters(), opt::SGDOptions(lr)));
+            optimizer = std::make_shared<opt::SGD>(opt::SGD(model->parameters(), opt::SGDOptions(lr)));
     }
 
     std::shared_ptr<AgentBase> agent {nullptr};
     switch (losses.at(dict.at("criterion"))) {
         case Loss::MSE:
-            agent = std::make_shared<Agent<nn::MSELoss>>(Agent<nn::MSELoss>(model, optimizer, nn::MSELoss()));
+            agent = std::make_shared<Agent<nn::MSELoss>>(Agent<nn::MSELoss>(model, optimizer, nn::MSELoss(), device));
         case Loss::NLL:
-            agent = std::make_shared<Agent<nn::NLLLoss>>(Agent<nn::NLLLoss>(model, optimizer, nn::NLLLoss()));
+            agent = std::make_shared<Agent<nn::NLLLoss>>(Agent<nn::NLLLoss>(model, optimizer, nn::NLLLoss(), device));
     }
     return agent;
 }
 
-auto Loader::get_dataset() {
+//template <typename... ARGS>
+//class TransformsWrapper {
+//    TransformsWrapper(tuple<ARGS...> transforms) {
+//
+//    }
+//
+//    ARGS...
+//};
+
+pair<shared_ptr<DatasetWrapper>, shared_ptr<DatasetWrapper>> Loader::get_dataset() {
     using namespace ConfigHelpers;
     namespace data = torch::data;
     namespace opt = torch::optim;
@@ -118,17 +117,21 @@ auto Loader::get_dataset() {
     string dataset_path {dict.at("dataset_path")};
     switch (datasets.at(dict.at("dataset"))) {
         case Dataset::MNIST: {
-            auto train_dataset = MNIST(dataset_path)
-                    .map(data::transforms::Normalize<>(0.1307, 0.3081))
-                    .map(data::transforms::Stack<>());
-            auto train_loader = data::make_data_loader<data::samplers::SequentialSampler>(
-                    std::move(train_dataset), std::stoi(dict.at("train_batch_size")));
-            auto test_dataset = MNIST(dataset_path, CustomDataset::Mode::kTest)
-                    .map(data::transforms::Normalize<>(0.1307, 0.3081))
-                    .map(data::transforms::Stack<>());
-            auto test_loader = data::make_data_loader<data::samplers::SequentialSampler>(
-                    move(test_dataset), stoi(dict.at("test_batch_size")));
-            return make_pair(move(train_loader), move(test_loader));
+            auto transforms{DatasetTransforms()};
+            transforms.normalize = std::make_shared<data::transforms::Normalize<>>(data::transforms::Normalize<>(0.1307, 0.3081));
+            transforms.stack = std::make_shared<data::transforms::Stack<>>(data::transforms::Stack<>());
+            auto train_dataset = make_shared<DatasetWrapper>(DatasetWrapper(
+                    CustomDataset(dataset_path),
+                    transforms,
+                    std::stoi(dict.at("train_batch_size")),
+                    std::stoi(dict.at("n_epochs"))));
+
+            auto test_dataset = make_shared<DatasetWrapper>(DatasetWrapper(
+                    CustomDataset(dataset_path, CustomDataset::Mode::kTest),
+                    transforms,
+                    std::stoi(dict.at("test_batch_size"))));
+
+            return make_pair(move(train_dataset), move(test_dataset));
         }
         case Dataset::FashionMNIST:
             // TODO
@@ -136,7 +139,13 @@ auto Loader::get_dataset() {
     }
 }
 
-auto Loader::process() { return make_tuple(get_agent(), get_dataset()); }
+tuple<
+    shared_ptr<AgentBase>,
+    shared_ptr<DatasetWrapper>,
+    shared_ptr<DatasetWrapper>> Loader::process() {
+    auto dataset = get_dataset();
+    return make_tuple(get_agent(), dataset.first, dataset.second);
+}
 
 class KeyValuePair : public string {};
 istream& operator>>(istream& is, KeyValuePair& line) {
@@ -151,7 +160,6 @@ istream& operator>>(istream& is, Loader& cfg) {
         vector<string> pair{istream_iterator<KeyValuePair>(iss),
                             istream_iterator<KeyValuePair>()};
         cfg.dict[pair[0]] = pair[1];
-        cout << pair << endl;
     }
     return is;
 }
